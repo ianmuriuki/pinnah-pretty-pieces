@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {site_name}!</title>
+    <style>
+        body { font-family: 'Georgia', serif; line-height: 1.6; color: #333; background: linear-gradient(to bottom, #fff5f7, #f0f8ff); margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(255, 182, 193, 0.2); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #FFB6C1, #9370DB); color: #fff; padding: 2rem; text-align: center; }
+        .header h1 { margin: 0; font-size: 1.8rem; }
+        .content { padding: 2rem; text-align: center; }
+        .welcome-text { font-size: 1.1rem; margin-bottom: 2rem; }
+        .quick-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin: 2rem 0; }
+        .link { background: #f8f8ff; padding: 1rem; border-radius: 8px; text-decoration: none; color: #9370DB; font-weight: bold; transition: background 0.2s; }
+        .link:hover { background: #e6e6fa; }
+        .cta { margin: 2rem 0; }
+        .btn { background: linear-gradient(135deg, #9370DB, #FFB6C1); color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; }
+        .footer { background: #9370DB; color: #fff; text-align: center; padding: 1rem; font-size: 0.9rem; }
+        @media (max-width: 600px) { .quick-links { flex-direction: column; align-items: center; } .header { padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to the Sparkle, {user_name}! 💎</h1>
+            <p>Your journey with {site_name} begins now.</p>
+        </div>
+        <div class="content">
+            <p class="welcome-text">Hi {user_name},</p>
+            <p>Thank you for joining our world of handcrafted beads and luxurious treasures. We're thrilled to help you discover (or create!) the perfect piece.</p>
+            
+            <div class="quick-links">
+                <a href="{SITE_URL}" class="link">🛍️ Shop Collections</a>
+                <a href="{SITE_URL}?page=custom-design" class="link">✨ Custom Design</a>
+                <a href="{SITE_URL}?page=contact" class="link">💬 Get Support</a>
+            </div>
+            
+            <div class="cta">
+                <a href="{SITE_URL}" class="btn">Start Shopping</a>
+            </div>
+            
+            <p>If you have any questions, reply to this email or WhatsApp us at {OWNER_PHONE}.</p>
+            <p>With love,<br>The {site_name} Team 💖</p>
+        </div>
+        <div class="footer">
+            <p>{site_name} | {OWNER_ADDRESS} | {BUSINESS_HOURS}</p>
+        </div>
+    </div>
+</body>
+</html>
