@@ -14,8 +14,8 @@ define('DB_NAME', 'pinnahs_pretty_pieces');
 // Site Settings
 define('SITE_NAME', 'Pinnah\'s Pretty Pieces');
 define('SITE_URL', 'http://localhost/pinnahs-pretty-pieces/');
-define('ADMIN_EMAIL', 'hello@penguinscollections.com');
-define('OWNER_PHONE', '+15551234567');
+define('ADMIN_EMAIL', 'ianmuriuki.inc@gmail.com');
+define('OWNER_PHONE', '+254795953801');
 define('OWNER_ADDRESS', '123 Coastal Dr, Seaside City SC 12345');
 define('BUSINESS_HOURS', 'Mon-Fri 9AM-6PM EST');
 
