@@ -24,7 +24,7 @@ class Database {
 
     private function __construct() {
         try {
-            $dsn = "mysql:host={$this->host};dbname={$this->dbname};charset=utf8mb4";
+            $dsn = "mysql:host={$this->host};dbname={$this->dbname};charset=utf8mb4;unix_socket=/opt/lampp/var/mysql/mysql.sock";
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

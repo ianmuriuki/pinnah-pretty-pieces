@@ -73,20 +73,21 @@ CREATE TABLE order_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Custom Requests Table: From custom-design form (emails + stores)
-CREATE TABLE custom_requests (
+CREATE TABLE IF NOT EXISTS custom_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,
     user_name VARCHAR(100) NOT NULL,
     user_email VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
     jewelry_type ENUM('bracelet', 'necklace', 'ring', 'waistbead') NOT NULL,
-    description TEXT NOT NULL,  -- Vision/details
+    description TEXT NOT NULL,
     budget DECIMAL(10,2),
     occasion VARCHAR(100),
     status ENUM('new', 'contacted', 'in_progress', 'completed') DEFAULT 'new',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_status (status),
-    INDEX idx_type (jewelry_type)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Wishlist Table: Optional (if ENABLE_WISHLIST true)
