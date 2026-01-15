@@ -2,102 +2,148 @@
 $pageTitle = 'Shopping Cart';
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/functions.php';
-if (!ENABLE_GUEST_CART && !isLoggedIn()) {
-    header('Location: index.php?page=login');
-    exit();
-}
 ?>
-<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<div style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
-    <h1 style="text-align: center; color: var(--purple);">Shopping Cart</h1>
-    
-    <div id="cart-container">
-        <!-- Dynamic content loaded via JS -->
-        <p style="text-align: center; color: var(--text-light);">Loading cart...</p>
-    </div>
+<section class="cart-section py-5">
+    <div class="container">
+        <h1 class="text-center mb-5 fw-bold" style="color: #4a148c;">Your Jewelry Box</h1>
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <div id="cart-container" class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                    <p class="text-center text-muted">Loading your treasures...</p>
+                </div>
+            </div>
 
-    <div id="cart-total" style="text-align: center; margin-top: 2rem; display: none;">
-        <h3 style="color: var(--purple);">Total: $<span id="total-amount">0.00</span></h3>
-        <?php if (isLoggedIn()): ?>
-            <a href="?page=checkout" class="btn" style="display: inline-block; margin-top: 1rem;">Proceed to Checkout</a>
-        <?php else: ?>
-            <a href="?page=login" class="btn" style="display: inline-block; margin-top: 1rem;">Login to Checkout</a>
-        <?php endif; ?>
-    </div>
+            <div class="col-lg-4">
+                <div id="cart-summary" class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 100px; display: none;">
+                    <h4 class="fw-bold mb-4">Order Summary</h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span class="fw-bold">KSh <span id="total-amount">0.00</span></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span>Shipping</span>
+                        <span class="text-success small">Calculated at checkout</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="h5 fw-bold">Total</span>
+                        <span class="h5 fw-bold text-primary">KSh <span id="final-amount">0.00</span></span>
+                    </div>
 
-    <?php if (empty($_SESSION['cart']) && !isLoggedIn()): ?>
-        <div style="text-align: center; padding: 2rem;">
-            <p>Your cart is empty. <a href="?page=collections">Continue Shopping</a></p>
+                    <?php if (isLoggedIn()): ?>
+                        <a href="index.php?page=checkout" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm py-3">
+                            PROCEED TO CHECKOUT
+                        </a>
+                    <?php else: ?>
+                        <a href="index.php?page=login" class="btn btn-outline-primary btn-lg w-100 rounded-pill py-3">
+                            LOGIN TO CHECKOUT
+                        </a>
+                    <?php endif; ?>
+                    
+                    <a href="index.php?page=collections" class="btn btn-link w-100 mt-3 text-decoration-none text-muted">
+                        <i class="fas fa-arrow-left me-2"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
         </div>
-    <?php endif; ?>
-</div>
+    </div>
+</section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     loadCart();
 
     function loadCart() {
-        fetch('<?php echo SITE_URL; ?>api/cart.php?action=list')
+        fetch('api/cart.php?action=list')
             .then(res => res.json())
             .then(data => {
                 const container = document.getElementById('cart-container');
-                const totalEl = document.getElementById('total-amount');
-                const totalDiv = document.getElementById('cart-total');
+                const summary = document.getElementById('cart-summary');
 
                 if (!data.success || data.data.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: var(--text-light);">Your cart is empty. <a href="?page=collections">Continue Shopping</a></p>';
-                    totalDiv.style.display = 'none';
+                    container.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                            <h4>Your cart is empty</h4>
+                            <p class="text-muted">Looks like you haven't picked any jewelry yet.</p>
+                            <a href="index.php?page=collections" class="btn btn-primary rounded-pill px-4 mt-3">Start Shopping</a>
+                        </div>`;
+                    summary.style.display = 'none';
+                    updateBadge(0);
                     return;
                 }
 
-                let html = '<div class="product-grid" style="grid-template-columns: 1fr; @media (min-width: 768px) { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }">';
-                let total = 0;
+                let html = '<div class="table-responsive"><table class="table align-middle border-0">';
                 data.data.forEach(item => {
-                    total += item.subtotal;
                     html += `
-                        <div class="product-card" style="display: flex; flex-direction: column; align-items: center; padding: 1rem;">
-                            <img src="${item.image}" alt="${item.name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
-                            <h3>${item.name}</h3>
-                            <p>$${item.price} x ${item.quantity} = $${item.subtotal.toFixed(2)}</p>
-                            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                                <input type="number" value="${item.quantity}" min="1" style="width: 60px; padding: 0.5rem;" onchange="updateQuantity(${item.id}, this.value)">
-                                <button onclick="removeFromCart(${item.id})" class="btn" style="padding: 0.5rem 1rem;">Remove</button>
-                            </div>
-                        </div>
-                    `;
+                        <tr class="border-bottom">
+                            <td style="width: 100px;">
+                                <img src="${item.image}" class="rounded-3 shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+                            </td>
+                            <td>
+                                <h6 class="fw-bold mb-0">${item.name}</h6>
+                                <small class="text-muted">KSh ${parseFloat(item.price).toLocaleString()}</small>
+                            </td>
+                            <td style="width: 150px;">
+                                <div class="input-group input-group-sm">
+                                    <button class="btn btn-outline-secondary" onclick="updateQty(${item.id}, ${item.quantity - 1})">-</button>
+                                    <input type="text" class="form-control text-center" value="${item.quantity}" readonly>
+                                    <button class="btn btn-outline-secondary" onclick="updateQty(${item.id}, ${item.quantity + 1})">+</button>
+                                </div>
+                            </td>
+                            <td class="text-end fw-bold">
+                                KSh ${item.subtotal.toLocaleString()}
+                            </td>
+                            <td class="text-end">
+                                <button onclick="removeItem(${item.id})" class="btn btn-link text-danger p-0">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>`;
                 });
-                html += '</div>';
+                html += '</table></div>';
+                
                 container.innerHTML = html;
-                totalEl.textContent = total.toFixed(2);
-                totalDiv.style.display = 'block';
-            })
-            .catch(err => {
-                document.getElementById('cart-container').innerHTML = '<p style="text-align: center; color: red;">Error loading cart. <button onclick="loadCart()">Retry</button></p>';
-                console.error(err);
+                document.getElementById('total-amount').textContent = data.total.toLocaleString();
+                document.getElementById('final-amount').textContent = data.total.toLocaleString();
+                summary.style.display = 'block';
+                updateBadge(data.cart_count);
             });
     }
 
-    window.updateQuantity = function(id, qty) {
-        fetch('<?php echo SITE_URL; ?>api/cart.php?action=update', {
+    window.updateQty = function(id, qty) {
+        if (qty < 0) return;
+        fetch('api/cart.php?action=update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: id, quantity: parseInt(qty) })
-        }).then(res => res.json()).then(data => {
-            if (data.success) loadCart();
+            body: JSON.stringify({ product_id: id, quantity: qty })
+        }).then(() => loadCart());
+    };
+
+    window.removeItem = function(id) {
+        Swal.fire({
+            title: 'Remove item?',
+            text: "Are you sure you want to remove this piece?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6a1b9a',
+            confirmButtonText: 'Yes, remove it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('api/cart.php?action=remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: id })
+                }).then(() => loadCart());
+            }
         });
     };
 
-    window.removeFromCart = function(id) {
-        fetch('<?php echo SITE_URL; ?>api/cart.php?action=remove', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: id })
-        }).then(res => res.json()).then(data => {
-            if (data.success) loadCart();
-        });
-    };
+    function updateBadge(count) {
+        const badge = document.querySelector('.cart-badge');
+        if (badge) badge.innerText = count;
+    }
 });
 </script>
-
-<?php include __DIR__ . '/../includes/footer.php'; ?>

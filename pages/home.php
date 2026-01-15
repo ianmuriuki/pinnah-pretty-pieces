@@ -15,48 +15,10 @@ try {
    
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $pageTitle ?> | Coral Sunset</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <style>
-        /* Custom styles for the slider and font override */
-        body {
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            background-color: #f7f9fb; /* Light background for the Featured section */
-        }
-        /* Custom class to manage slider images (Full-screen background mode) */
-        .slider-image {
-            transition: opacity 1s ease-in-out;
-            opacity: 0;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Ensures the image covers the entire screen area */
-            border-radius: 0; /* No rounding needed for full-screen */
-        }
-        .slider-image.active {
-            opacity: 1;
-        }
-        .slider-dot {
-            transition: background-color 0.3s;
-        }
-    </style>
-</head>
-<body>
-
 <!-- Main Content Wrapper -->
-<div class="min-h-screen">
-
-    <!-- HERO SECTION: Designed for min-h-screen with Full-Page Background Slider -->
-    <div class="relative w-full min-h-screen flex flex-col justify-center items-center p-4 md:p-8 overflow-hidden">
+<div class="main-content">
+    <!-- HERO SECTION: Designed for Full-Page Background Slider -->
+    <div style="position: relative; width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; overflow: hidden; z-index: 1000;">
 
         <div class="absolute inset-0 z-0">
               <img id="slide-0" class="slider-image active" 
@@ -69,31 +31,29 @@ try {
                   src="<?php echo defined('SITE_URL') ? SITE_URL : ''; ?>assets/images/products/slide2.jpg" 
                   alt="Close-up image of handcrafted coral bead jewelry">
 
-            <div class="absolute inset-0 bg-black/40 transition duration-1000 ease-in-out"></div>
+            <div style="position: absolute; inset: 0; background-color: rgba(0, 0, 0, 0.4); transition: opacity 1s ease-in-out;"></div>
         </div>
 
-        <div class="relative z-10 w-full max-w-6xl flex flex-col items-center text-center text-white">
-            <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight mb-4 drop-shadow-2xl">
+        <div style="position: relative; z-index: 10; width: 100%; max-width: 64rem; display: flex; flex-direction: column; align-items: center; text-align: center; color: var(--white);">
+            <h1 class="hero-title">
                 Coral Sunset Treasures Meets Artistry
             </h1>
-            <p class="text-lg md:text-xl text-white/90 mb-8 max-w-xl drop-shadow-lg">
+            <p class="hero-subtitle">
                 Vibrant coral beads capturing golden hour magic. Handcrafted treasures, designed uniquely for you.
             </p>
             
             <!-- Hero Buttons -->
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-10 w-full justify-center">
-                <a href="?page=collections" class="w-full sm:w-auto px-10 py-3 rounded-full font-semibold text-pink-700 shadow-2xl transform transition duration-300 
-                   bg-white hover:bg-pink-100 hover:scale-[1.03]">
+            <div class="hero-buttons">
+                <a href="index.php?page=collections" class="btn btn-primary" style="padding: 0.75rem 2.5rem; border-radius: 9999px; font-weight: 600;">
                     Shop Coral →
                 </a>
-                <a href="?page=custom-design" class="w-full sm:w-auto px-10 py-3 rounded-full font-semibold text-white border-2 border-white 
-                   bg-white/20 backdrop-blur-sm shadow-md transform transition duration-300 hover:bg-white/30 hover:scale-[1.03]">
+                <a href="index.php?page=custom-design" class="btn btn-secondary" style="padding: 0.75rem 2.5rem; border-radius: 9999px; font-weight: 600;">
                     Custom Design
                 </a>
             </div>
 
             <!-- Stats Cards Grid -->
-            <div class="grid grid-cols-3 gap-4 w-full max-w-md lg:max-w-lg mt-8">
+            <div class="row g-4 justify-content-center" style="width: 100%; max-width: 28rem;">
                 <?php
                 $stats = [
                     ['value' => '100+', 'label' => 'Happy Customers'],
@@ -102,21 +62,23 @@ try {
                 ];
                 foreach ($stats as $stat) {
                     echo '
-                    <div class="p-4 sm:p-6 bg-white/30 backdrop-blur-sm rounded-xl shadow-2xl border border-white/50 
-                         text-center transform hover:scale-[1.05] transition duration-300">
-                        <span class="text-2xl sm:text-3xl font-extrabold text-white block drop-shadow-md">'.$stat['value'].'</span>
-                        <span class="text-xs sm:text-sm text-white/90 font-medium">'.$stat['label'].'</span>
+                    <div class="col-4">
+                        <div class="card" style="background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 0.75rem; box-shadow: 0 0 2rem rgba(0, 0, 0, 0.2); text-align: center; transition: transform 0.3s ease;">
+                            <div class="card-body" style="padding: 1rem;">
+                                <span style="font-size: 1.5rem; font-weight: 800; color: var(--white); display: block; text-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.3);">' . $stat['value'] . '</span>
+                                <span style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.9); font-weight: 500;">' . $stat['label'] . '</span>
+                            </div>
+                        </div>
                     </div>';
                 }
                 ?>
             </div>
 
-            <!-- Slider Dots/Indicators (Positioned at the bottom of the hero content) -->
-            <div id="slider-dots" class="mt-12 flex space-x-2 z-20">
-                <!-- Data slide attributes match the slide indices (0, 1, 2) to align with JS -->
-                <button data-slide="0" class="slider-dot w-3 h-3 bg-white rounded-full active-dot opacity-80"></button>
-                <button data-slide="1" class="slider-dot w-3 h-3 bg-white rounded-full opacity-40 hover:opacity-80"></button>
-                <button data-slide="2" class="slider-dot w-3 h-3 bg-white rounded-full opacity-40 hover:opacity-80"></button>
+            <!-- Slider Dots/Indicators -->
+            <div id="slider-dots" style="margin-top: 3rem; display: flex; gap: 0.5rem; z-index: 20;">
+                <button data-slide="0" class="slider-dot" style="width: 0.75rem; height: 0.75rem; background-color: var(--white); border-radius: 9999px; opacity: 0.8;"></button>
+                <button data-slide="1" class="slider-dot" style="width: 0.75rem; height: 0.75rem; background-color: var(--white); border-radius: 9999px; opacity: 0.4;"></button>
+                <button data-slide="2" class="slider-dot" style="width: 0.75rem; height: 0.75rem; background-color: var(--white); border-radius: 9999px; opacity: 0.4;"></button>
             </div>
             
         </div>
@@ -125,19 +87,19 @@ try {
     <!-- END HERO SECTION -->
 
     <!-- FEATURED ITEMS SECTION -->
-    <section class="py-16 px-4 md:px-8 bg-white" id="featured-collections">
-        <div class="max-w-7xl mx-auto">
-            <header class="text-center mb-12">
-                <p class="text-pink-600 font-semibold uppercase tracking-wider text-sm">Our Handpicked Selection</p>
-                <h2 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mt-2">
+    <section style="padding: 4rem 2rem; background-color: var(--white);" id="featured-collections">
+        <div class="container">
+            <header style="text-align: center; margin-bottom: 3rem;">
+                <p style="color: var(--deep-pink); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem;">Our Handpicked Selection</p>
+                <h2 style="font-size: 2.25rem; font-weight: 800; color: var(--text-dark); margin-top: 0.5rem;">
                     Treasures of the Sunset
                 </h2>
-                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">
+                <p style="color: var(--text-light); margin-top: 1rem; max-width: 42rem; margin-left: auto; margin-right: auto;">
                     Explore our most popular pieces—where vibrant coral meets golden artistry. Each piece is crafted with passion.
                 </p>
             </header>
 
-            <div id="featured-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="product-grid">
                 
                 <?php
                 // MOCK DATA FALLBACK - ONLY USED IF DB IS EMPTY OR FETCH FAILS
@@ -169,53 +131,48 @@ try {
                         $display_price = number_format(isset($product['price']) ? $product['price'] : 0.00, 2);
                         
                         echo '
-                        <div class="bg-white rounded-2xl shadow-xl overflow-hidden group transform transition duration-500 hover:shadow-2xl hover:-translate-y-2 border border-gray-100 product-card" data-id="'.$product['id'].'">
-                            <!-- Product Image Container -->
-                            <div class="relative overflow-hidden h-64">
-                                <!-- Tag -->
-                                <span class="absolute top-3 left-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md">
+                        <div class="product-card" data-id="'.$product['id'].'">
+                            <div class="product-image-wrapper">
+                                <span style="position: absolute; top: 0.75rem; left: 0.75rem; background-color: var(--deep-pink); color: var(--white); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 9999px; z-index: 10; box-shadow: var(--shadow-sm);">
                                     '.$tag.'
                                 </span>
                                 <img src="'.$imagePath.'" 
                                      onerror="this.onerror=null;this.src=\''.$placeholder_url.'\'" 
                                      alt="'.htmlspecialchars($product['name']).'" 
-                                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"/>
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition-base);"/>
                             </div>
                             
-                            <!-- Product Details -->
-                            <div class="p-6">
-                                <h3 class="text-xl font-bold text-gray-900 mb-1 leading-snug">'.htmlspecialchars($product['name']).'</h3>
-                                <p class="text-sm text-gray-500 mb-4 h-12 overflow-hidden">'.htmlspecialchars($product['description']).'</p>
+                            <div class="product-card-body">
+                                <h3 class="product-title">'.htmlspecialchars($product['name']).'</h3>
+                                <p style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 1rem; height: 3rem; overflow: hidden;">'.htmlspecialchars($product['description']).'</p>
                                 
-                                <div class="flex justify-between items-center mb-4">
-                                    <p class="text-3xl font-extrabold text-pink-600">KSh '.$display_price.'</p> <!-- CORRECTED: Added space -->
-                                    <!-- Example Placeholder for Rating -->
-                                    <div class="text-yellow-400 flex items-center space-x-1">
-                                        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.487 7.09l6.56-.955L10 0l2.953 6.135 6.56.955-4.758 4.63 1.123 6.545z"/></svg>
-                                        <span class="text-sm text-gray-600">4.8 (120)</span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <p style="font-size: 1.875rem; font-weight: 800; color: var(--deep-pink);">KSh '.$display_price.'</p>
+                                    <div style="color: #fbbf24; display: flex; align-items: center; gap: 0.25rem;">
+                                        <svg style="width: 1.25rem; height: 1.25rem;" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.487 7.09l6.56-.955L10 0l2.953 6.135 6.56.955-4.758 4.63 1.123 6.545z"/></svg>
+                                        <span style="font-size: 0.875rem; color: var(--text-light);">4.8 (120)</span>
                                     </div>
                                 </div>
 
                                 <button onclick="addToCart('.$product['id'].')" 
-                                        class="w-full py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-lg hover:bg-purple-700 
-                                               transition duration-300 transform hover:shadow-xl hover:scale-[0.99] flex items-center justify-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z"></path></svg>
+                                        class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-weight: 600; border-radius: 0.5rem; box-shadow: var(--shadow-lg); transition: all var(--transition-base); display: flex; align-items: center; justify-content: center;">
+                                    <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z"></path></svg>
                                     Add to Cart
                                 </button>
                             </div>
                         </div>';
                     }
                 } else {
-                    echo '<p class="col-span-full text-center text-gray-500 py-12">No featured products found. Please use the Admin Panel to mark products as featured.</p>';
+                    echo '<p style="grid-column: 1 / -1; text-align: center; color: var(--text-light); padding: 3rem 0;">No featured products found. Please use the Admin Panel to mark products as featured.</p>';
                 }
                 ?>
                 
             </div>
             
-            <div class="text-center mt-12">
-                <a href="?page=all-collections" class="inline-flex items-center text-lg font-semibold text-purple-600 hover:text-purple-800 transition">
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="index.php?page=collections" style="display: inline-flex; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--deep-purple); transition: color var(--transition-base);">
                     View All Collections
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    <svg style="width: 1.25rem; height: 1.25rem; margin-left: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                 </a>
             </div>
         </div>
@@ -234,16 +191,18 @@ try {
     function showSlide(index) {
         // Reset all slides and dots
         slides.forEach(slide => slide.classList.remove('active'));
-        document.querySelectorAll('.slider-dot').forEach(dot => dot.classList.remove('active-dot', 'opacity-80'));
-        document.querySelectorAll('.slider-dot').forEach(dot => dot.classList.add('opacity-40'));
+        document.querySelectorAll('.slider-dot').forEach(dot => {
+            dot.classList.remove('active-dot');
+            dot.style.opacity = '0.4';
+        });
 
         // Set the active slide and dot
         slides[index].classList.add('active');
         // Find the dot whose data-slide attribute matches the current index
         const activeDot = dotsContainer.querySelector(`[data-slide="${index}"]`);
         if (activeDot) {
-            activeDot.classList.add('active-dot', 'opacity-80');
-            activeDot.classList.remove('opacity-40');
+            activeDot.classList.add('active-dot');
+            activeDot.style.opacity = '0.8';
         }
     }
 
@@ -279,5 +238,3 @@ try {
     }
     
 </script>
-</body>
-</html>
