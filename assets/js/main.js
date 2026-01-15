@@ -1,11 +1,11 @@
 // Main JS for Pinnah's Pretty Pieces – Cart, Forms, WhatsApp, Products
 // Vanilla JS – No libs. Fixes lint errors (no redeclarations, proper objects/arrays)
 
-let cart = JSON.parse(sessionStorage.getItem('cart')) || [];  // Cart state
+let cart = JSON.parse(sessionStorage.getItem("cart")) || []; // Cart state
 
 // Update nav cart count
 function updateCartCount() {
-  const countEl = document.querySelector('.cart-count');
+  const countEl = document.querySelector(".cart-count");
   if (countEl) {
     const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     countEl.textContent = totalQty;
@@ -15,82 +15,82 @@ function updateCartCount() {
 // Add to cart (AJAX + local update)
 function addToCart(productId, quantity = 1) {
   const bodyData = { product_id: productId, quantity: quantity };
-  fetch('api/cart.php?action=add', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bodyData)
+  fetch("api/cart.php?action=add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(bodyData),
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      const existing = cart.find(item => item.id === productId);
-      if (existing) {
-        existing.quantity += quantity;
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        const existing = cart.find((item) => item.id === productId);
+        if (existing) {
+          existing.quantity += quantity;
+        } else {
+          cart.push({ id: productId, quantity: quantity });
+        }
+        sessionStorage.setItem("cart", JSON.stringify(cart));
+        updateCartCount();
+        alert("Added to cart! 💖");
       } else {
-        cart.push({ id: productId, quantity: quantity });
+        alert("Error: " + (data.message || "Add failed"));
       }
-      sessionStorage.setItem('cart', JSON.stringify(cart));
-      updateCartCount();
-      alert('Added to cart! 💖');
-    } else {
-      alert('Error: ' + (data.message || 'Add failed'));
-    }
-  })
-  .catch(err => {
-    console.error('Cart add error:', err);
-    alert('Add to cart failed—check connection.');
-  });
+    })
+    .catch((err) => {
+      console.error("Cart add error:", err);
+      alert("Add to cart failed—check connection.");
+    });
 }
 
 // Remove from cart
 function removeFromCart(productId) {
   const bodyData = { product_id: productId };
-  fetch('api/cart.php?action=remove', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bodyData)
+  fetch("api/cart.php?action=remove", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(bodyData),
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      cart = cart.filter(item => item.id !== productId);
-      sessionStorage.setItem('cart', JSON.stringify(cart));
-      updateCartCount();
-      location.reload();  // Refresh UI
-    }
-  })
-  .catch(err => console.error('Cart remove error:', err));
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        cart = cart.filter((item) => item.id !== productId);
+        sessionStorage.setItem("cart", JSON.stringify(cart));
+        updateCartCount();
+        location.reload(); // Refresh UI
+      }
+    })
+    .catch((err) => console.error("Cart remove error:", err));
 }
 
 // Update quantity
 function updateQuantity(productId, quantity) {
   if (quantity <= 0) return removeFromCart(productId);
   const bodyData = { product_id: productId, quantity: parseInt(quantity) };
-  fetch('api/cart.php?action=update', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bodyData)
+  fetch("api/cart.php?action=update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(bodyData),
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      const item = cart.find(item => item.id === productId);
-      if (item) item.quantity = parseInt(quantity);
-      sessionStorage.setItem('cart', JSON.stringify(cart));
-      updateCartCount();
-    }
-  })
-  .catch(err => console.error('Quantity update error:', err));
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        const item = cart.find((item) => item.id === productId);
+        if (item) item.quantity = parseInt(quantity);
+        sessionStorage.setItem("cart", JSON.stringify(cart));
+        updateCartCount();
+      }
+    })
+    .catch((err) => console.error("Quantity update error:", err));
 }
 
 // Form validation
 function validateForm(formId) {
   const form = document.getElementById(formId);
   if (!form) return false;
-  const required = form.querySelectorAll('[required]');
+  const required = form.querySelectorAll("[required]");
   for (let field of required) {
     if (!field.value.trim()) {
-      alert('Please fill all required fields.');
+      alert("Please fill all required fields.");
       field.focus();
       return false;
     }
@@ -100,19 +100,19 @@ function validateForm(formId) {
 
 // WhatsApp open
 function openWhatsApp(message) {
-  const phone = '<?php echo str_replace("+", "", OWNER_PHONE); ?>';  // PHP in JS—header.php outputs it
+  const phone = '<?php echo str_replace("+", "", OWNER_PHONE); ?>'; // PHP in JS—header.php outputs it
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-  window.open(url, '_blank', 'noopener,noreferrer');
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 // Custom design type select
 function initTypeSelection() {
-  const options = document.querySelectorAll('.type-option');
-  options.forEach(option => {
-    option.addEventListener('click', () => {
-      options.forEach(o => o.classList.remove('selected'));
-      option.classList.add('selected');
-      const hiddenInput = document.getElementById('jewelry-type');
+  const options = document.querySelectorAll(".type-option");
+  options.forEach((option) => {
+    option.addEventListener("click", () => {
+      options.forEach((o) => o.classList.remove("selected"));
+      option.classList.add("selected");
+      const hiddenInput = document.getElementById("jewelry-type");
       if (hiddenInput) hiddenInput.value = option.dataset.type;
     });
   });
@@ -120,109 +120,221 @@ function initTypeSelection() {
 
 // Contact form
 function initContactForm() {
-  const form = document.getElementById('contact-form');
+  const form = document.getElementById("contact-form");
   if (!form) return;
-  form.addEventListener('submit', (e) => {
-    if (!validateForm('contact-form')) {
+  form.addEventListener("submit", (e) => {
+    if (!validateForm("contact-form")) {
       e.preventDefault();
       return;
     }
-    const method = document.getElementById('preferred-method').value;
-    if (method === 'whatsapp') {
+    const method = document.getElementById("preferred-method").value;
+    if (method === "whatsapp") {
       e.preventDefault();
-      const subject = document.getElementById('subject').value;
-      const message = document.getElementById('message').value;
+      const subject = document.getElementById("subject").value;
+      const message = document.getElementById("message").value;
       openWhatsApp(`Subject: ${subject}\nMessage: ${message}`);
     } else {
       // Submit to API
       const formData = new FormData(form);
-      fetch('api/custom-requests.php', {
-        method: 'POST',
-        body: formData
+      fetch("api/custom-requests.php", {
+        method: "POST",
+        body: formData,
       })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) alert('Message sent!');
-        else alert('Error: ' + data.message);
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) alert("Message sent!");
+          else alert("Error: " + data.message);
+        });
     }
   });
 }
 
 // Custom form
 function initCustomForm() {
-  const form = document.getElementById('custom-form');
+  const form = document.getElementById("custom-form");
   if (!form) return;
-  form.addEventListener('submit', (e) => {
-    if (!validateForm('custom-form')) {
+  form.addEventListener("submit", (e) => {
+    if (!validateForm("custom-form")) {
       e.preventDefault();
       return;
     }
     const formData = new FormData(form);
-    fetch('api/custom-requests.php', {
-      method: 'POST',
-      body: formData
+    fetch("api/custom-requests.php", {
+      method: "POST",
+      body: formData,
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        alert('Request sent! WhatsApp opening...');
-        const vision = document.getElementById('vision').value;
-        openWhatsApp(`Custom design inquiry: ${vision}`);
-      } else {
-        alert('Error: ' + data.message);
-      }
-    });
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          alert("Request sent! WhatsApp opening...");
+          const vision = document.getElementById("vision").value;
+          openWhatsApp(`Custom design inquiry: ${vision}`);
+        } else {
+          alert("Error: " + data.message);
+        }
+      });
     e.preventDefault();
   });
 }
 
 // Load products (home/collections)
-function loadProducts(containerId, params = '') {
+function loadProducts(containerId, params = "") {
   const container = document.getElementById(containerId);
   if (!container) return;
   fetch(`api/products.php?action=list${params}`)
-    .then(res => res.json())
-    .then(data => {
+    .then((res) => res.json())
+    .then((data) => {
       if (!data.success || !data.data || data.data.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: var(--text-light);">No products found. <a href="?page=collections">Shop all</a></p>';
+        container.innerHTML =
+          '<p style="text-align: center; color: var(--text-light);">No products found. <a href="?page=collections">Shop all</a></p>';
         return;
       }
-      let html = '';
-      data.data.forEach(product => {
+      let html = "";
+      data.data.forEach((product) => {
         html += `
           <div class="product-card">
-            <img src="${product.image}" alt="${product.name}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
+            <img src="${product.image}" alt="${
+          product.name
+        }" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
             <h3>${product.name}</h3>
-            <p style="font-weight: bold; color: var(--purple);">$ ${product.price}</p>
+            <p style="font-weight: bold; color: var(--purple);">$ ${
+              product.price
+            }</p>
             <p>${product.description.substring(0, 100)}...</p>
-            <button onclick="addToCart(${product.id})" class="btn" style="width: 100%;">Add to Cart</button>
-            <a href="?page=product-detail&id=${product.id}" style="display: block; text-align: center; margin-top: 0.5rem; color: var(--purple);">View Details</a>
+            <button onclick="addToCart(${
+              product.id
+            })" class="btn" style="width: 100%;">Add to Cart</button>
+            <a href="?page=product-detail&id=${
+              product.id
+            }" style="display: block; text-align: center; margin-top: 0.5rem; color: var(--purple);">View Details</a>
           </div>
         `;
       });
       container.innerHTML = html;
     })
-    .catch(err => {
-      console.error('Products load error:', err);
-      container.innerHTML = '<p style="text-align: center; color: red;">Error loading products. <button onclick="loadProducts(\'' + containerId + '\', \'' + params + '\')">Retry</button></p>';
+    .catch((err) => {
+      console.error("Products load error:", err);
+      container.innerHTML =
+        '<p style="text-align: center; color: red;">Error loading products. <button onclick="loadProducts(\'' +
+        containerId +
+        "', '" +
+        params +
+        "')\">Retry</button></p>";
     });
 }
 
 // DOM ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   updateCartCount();
   initTypeSelection();
   initContactForm();
   initCustomForm();
-  
+
   // Load featured on home
-  const featured = document.getElementById('featured-grid');
-  if (featured) loadProducts('featured-grid', '&featured=1');
-  
+  const featured = document.getElementById("featured-grid");
+  if (featured) loadProducts("featured-grid", "&featured=1");
+
   // Load collections
-  const collections = document.getElementById('collections-grid');
-  if (collections) loadProducts('collections-grid');
+  const collections = document.getElementById("collections-grid");
+  if (collections) loadProducts("collections-grid");
+
+  // Safety: ensure navbar is visible if some script accidentally hid it
+  try {
+    const nav = document.querySelector(".main-navbar");
+    if (nav) {
+      nav.style.display = nav.style.display || "flex";
+      nav.style.visibility = "visible";
+      nav.classList.remove("d-none");
+    }
+  } catch (e) {
+    console.warn("Navbar visibility fix failed", e);
+  }
+  // Ensure body padding matches the actual navbar height to avoid content being hidden
+  function fixNavbarSpacing() {
+    try {
+      const navEl = document.querySelector(".main-navbar");
+      if (!navEl) return;
+      // Use offsetHeight which includes the collapse when expanded
+      const navHeight =
+        navEl.offsetHeight || parseInt(getComputedStyle(navEl).height) || 0;
+      document.body.style.paddingTop = navHeight + "px";
+    } catch (err) {
+      console.warn("fixNavbarSpacing error", err);
+    }
+  }
+
+  // Initial spacing fix
+  fixNavbarSpacing();
+
+  // Recalculate on window resize (debounced)
+  let _resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(fixNavbarSpacing, 120);
+  });
+
+  // If Bootstrap collapse exists, listen for show/hide events to update spacing
+  try {
+    const collapseEl = document.getElementById("navbarNav");
+    if (collapseEl) {
+      collapseEl.addEventListener("shown.bs.collapse", fixNavbarSpacing);
+      collapseEl.addEventListener("hidden.bs.collapse", fixNavbarSpacing);
+    }
+  } catch (e) {
+    // ignore if bootstrap events not present
+  }
+
+  // Cleanup duplicates: if multiple .main-navbar instances exist, keep the first
+  try {
+    const navs = document.querySelectorAll(".main-navbar");
+    if (navs.length > 1) {
+      for (let i = 1; i < navs.length; i++) {
+        navs[i].parentNode && navs[i].parentNode.removeChild(navs[i]);
+      }
+    }
+  } catch (e) {
+    console.warn("Navbar cleanup failed", e);
+  }
+
+  // MutationObserver: watch for accidental hiding or class/style changes and restore nav
+  try {
+    const nav = document.querySelector(".main-navbar");
+    if (nav) {
+      const mo = new MutationObserver((mutations) => {
+        mutations.forEach((m) => {
+          if (
+            m.type === "attributes" &&
+            (m.attributeName === "style" || m.attributeName === "class")
+          ) {
+            const cs = getComputedStyle(nav);
+            if (
+              cs.display === "none" ||
+              cs.visibility === "hidden" ||
+              nav.classList.contains("d-none")
+            ) {
+              console.warn("Navbar hidden detected by MutationObserver", {
+                mutation: m,
+                before: cs,
+              });
+              console.warn(
+                new Error().stack.split("\n").slice(1, 6).join("\n")
+              );
+              nav.style.display = "flex";
+              nav.style.visibility = "visible";
+              nav.classList.remove("d-none");
+              fixNavbarSpacing();
+            }
+          }
+        });
+      });
+      mo.observe(nav, {
+        attributes: true,
+        attributeFilter: ["style", "class"],
+      });
+    }
+  } catch (e) {
+    console.warn("Navbar MutationObserver failed", e);
+  }
 });
 
 // Expose globals for onclick

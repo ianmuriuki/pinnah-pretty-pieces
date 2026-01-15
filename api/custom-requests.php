@@ -1,90 +1,104 @@
 <?php
-/*
- * Custom Requests API for Pinnah's Pretty Pieces
- * Endpoints: POST /api/custom-requests.php (submit form), GET /api/custom-requests.php?action=list (admin view)
- * Stores in DB, sends notification email. WhatsApp via JS in form.
+/**
+ * Custom Requests API - Final Refactor
  */
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: ' . implode(', ', ALLOWED_ORIGINS));
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// 1. Prevent PHP from showing HTML errors in the middle of our JSON
+ini_set('display_errors', 0); 
+error_reporting(E_ALL);
 
+header('Content-Type: application/json');
+
+require_once __DIR__ . '/../config/config.php'; 
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
+// CORS handling
+$allowed = defined('ALLOWED_ORIGINS') ? ALLOWED_ORIGINS : ['*'];
+header('Access-Control-Allow-Origin: ' . (is_array($allowed) ? implode(', ', $allowed) : $allowed));
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit(0);
 
 $action = $_GET['action'] ?? 'submit';
-$response = ['success' => false, 'message' => 'Invalid action'];
+$response = ['success' => false, 'message' => 'Internal server error'];
 
-if ($action === 'list' && !isAdmin()) {
-    $response['message'] = 'Admin access required';
-    echo json_encode($response);
-    exit();
+try {
+    $db = Database::getInstance();
+
+    switch ($action) {
+        case 'submit':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Method not allowed');
+            }
+
+            // Read JSON or Post data
+            $rawInput = file_get_contents('php://input');
+            $input = json_decode($rawInput, true) ?: $_POST;
+
+            // Mapping form fields to DB columns
+            $user_id = getUserId(); // Safe helper from functions.php
+            $user_name = sanitizeInput($input['full_name'] ?? $input['user_name'] ?? '');
+            $user_email = sanitizeInput($input['email'] ?? $input['user_email'] ?? '', 'email');
+            $phone = sanitizeInput($input['phone'] ?? '');
+            $jewelry_type = sanitizeInput($input['jewelry_type'] ?? '');
+            $description = sanitizeInput($input['vision'] ?? $input['description'] ?? '');
+            $budget = filter_var($input['budget'] ?? 0, FILTER_VALIDATE_FLOAT);
+            $occasion = sanitizeInput($input['occasion'] ?? '');
+
+            // Strict Validation
+            if (empty($user_name) || empty($user_email) || empty($jewelry_type) || empty($description)) {
+                throw new Exception('Missing required fields. Please provide Name, Email, Type, and Vision.');
+            }
+
+            // Database Insertion
+            $stmt = $db->pdo->prepare("
+                INSERT INTO custom_requests (user_id, user_name, user_email, phone, jewelry_type, description, budget, occasion, status, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'new', NOW())
+            ");
+
+            if ($stmt->execute([$user_id, $user_name, $user_email, $phone, $jewelry_type, $description, $budget, $occasion])) {
+                
+                // Use a try-catch for the email so a mail failure doesn't stop the success message
+                try {
+                    $requestData = compact('user_name', 'user_email', 'phone', 'jewelry_type', 'description', 'budget', 'occasion');
+                    if (function_exists('sendCustomRequestNotification')) {
+                        sendCustomRequestNotification($requestData);
+                    }
+                } catch (Exception $e) {
+                    // Log error internally, don't tell the user
+                    error_log("Mail Error: " . $e->getMessage());
+                }
+
+                $response = [
+                    'success' => true, 
+                    'message' => 'Request submitted! We will contact you within 24 hours.'
+                ];
+            } else {
+                throw new Exception('Could not save your request. Please try again later.');
+            }
+            break;
+
+        case 'list':
+            if (!isAdmin()) throw new Exception('Unauthorized access');
+            $stmt = $db->pdo->query("SELECT * FROM custom_requests ORDER BY created_at DESC LIMIT 100");
+            $response = ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+            break;
+
+        default:
+            throw new Exception('Invalid action');
+    }
+
+} catch (Exception $e) {
+    // Return errors as clean JSON
+    $response = [
+        'success' => false,
+        'message' => $e->getMessage()
+    ];
 }
 
-switch ($action) {
-    case 'submit':
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $response['message'] = 'Method not allowed';
-            break;
-        }
-        $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-        $user_name = sanitizeInput($input['full_name'] ?? $input['user_name'] ?? '');
-        $user_email = sanitizeInput($input['email'] ?? $input['user_email'] ?? '', 'email');
-        $phone = sanitizeInput($input['phone'] ?? '');
-        $jewelry_type = sanitizeInput($input['jewelry_type'] ?? '');
-        $description = sanitizeInput($input['vision'] ?? $input['description'] ?? '');
-        $budget = (float)($input['budget'] ?? 0);
-        $occasion = sanitizeInput($input['occasion'] ?? '');
-
-        if (empty($user_name) || empty($user_email) || empty($jewelry_type) || empty($description)) {
-            $response['message'] = 'Missing required fields';
-            break;
-        }
-
-        $db = Database::getInstance();
-        $stmt = $db->pdo->prepare("
-            INSERT INTO custom_requests (user_name, user_email, phone, jewelry_type, description, budget, occasion) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-        if ($stmt->execute([$user_name, $user_email, $phone, $jewelry_type, $description, $budget, $occasion])) {
-            $requestData = [
-                'user_name' => $user_name,
-                'user_email' => $user_email,
-                'phone' => $phone,
-                'jewelry_type' => $jewelry_type,
-                'description' => $description,
-                'budget' => $budget,
-                'occasion' => $occasion
-            ];
-            sendCustomRequestNotification($requestData);
-            $response = ['success' => true, 'message' => 'Request submitted! We\'ll contact you within 24 hours.'];
-        } else {
-            $response['message'] = 'Submission failed';
-        }
-        break;
-
-    case 'list':
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            $response['message'] = 'Method not allowed';
-            break;
-        }
-        $db = Database::getInstance();
-        $requests = $db->query("
-            SELECT * FROM custom_requests 
-            ORDER BY created_at DESC 
-            LIMIT 50
-        ");
-        $response = ['success' => true, 'data' => $requests];
-        break;
-
-    default:
-        $response['message'] = 'No action specified';
-}
-
+// Clean any accidental whitespace before outputting JSON
+ob_clean();
 echo json_encode($response);
-?>
+exit();

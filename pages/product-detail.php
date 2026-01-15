@@ -7,7 +7,7 @@ if ($id <= 0) {
     exit();
 }
 ?>
-<?php include __DIR__ . '/../includes/header.php'; ?>
+<!-- page fragment; header provided by index.php -->
 
 <div id="product-detail" style="padding: 2rem; max-width: 1000px; margin: 0 auto; display: none;">
     <!-- Dynamic -->
@@ -50,4 +50,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<!-- footer provided by index.php -->

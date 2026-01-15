@@ -2,75 +2,127 @@
 $pageTitle = 'Contact';
 require_once __DIR__ . '/../includes/session.php';
 ?>
-<?php include __DIR__ . '/../includes/header.php'; ?>
 
-<div class="form-section">
-    <div class="contact-info">
-        <h2>Contact Information</h2>
-        <div class="contact-card">
-            <span class="contact-icon">📞</span>
-            <strong>Phone</strong><br>
-            <?php echo OWNER_PHONE; ?><br>
-            <?php echo BUSINESS_HOURS; ?>
-        </div>
-        <div class="contact-card">
-            <span class="contact-icon">✉️</span>
-            <strong>Email</strong><br>
-            <a href="mailto:<?php echo ADMIN_EMAIL; ?>"><?php echo ADMIN_EMAIL; ?></a><br>
-            We respond within 24 hours.
-        </div>
-        <div class="contact-card">
-            <span class="contact-icon">💬</span>
-            <strong>WhatsApp</strong><br>
-            <?php echo OWNER_PHONE; ?><br>
-            Instant messaging support.
-        </div>
-        <div class="contact-card">
-            <span class="contact-icon">📍</span>
-            <strong>Visit Us</strong><br>
-            <?php echo OWNER_ADDRESS; ?>
-        </div>
-        <div class="contact-card">
-            <span class="contact-icon">🕒</span>
-            <strong>Business Hours</strong><br>
-            <?php echo BUSINESS_HOURS; ?>
+<section class="page-section contact-section">
+    <div class="container">
+        <div class="row">
+            <!-- Contact Information -->
+            <div class="col-lg-4 mb-4 mb-lg-0">
+                <div class="contact-info-card">
+                    <h2>Contact Information</h2>
+                    <div class="contact-info-list">
+                        <div class="contact-info-item">
+                            <i class="fas fa-phone contact-info-icon"></i>
+                            <div>
+                                <strong>Phone</strong>
+                                <p><?php echo defined('OWNER_PHONE') ? OWNER_PHONE : '+254 712 345 678'; ?></p>
+                                <p class="text-muted small"><?php echo defined('BUSINESS_HOURS') ? BUSINESS_HOURS : 'Mon-Sat: 9AM-6PM'; ?></p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-info-item">
+                            <i class="fas fa-envelope contact-info-icon"></i>
+                            <div>
+                                <strong>Email</strong>
+                                <p><a href="mailto:<?php echo defined('ADMIN_EMAIL') ? ADMIN_EMAIL : 'support@pinnahsprettypieces.com'; ?>"><?php echo defined('ADMIN_EMAIL') ? ADMIN_EMAIL : 'support@pinnahsprettypieces.com'; ?></a></p>
+                                <p class="text-muted small">We respond within 24 hours</p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-info-item">
+                            <i class="fab fa-whatsapp contact-info-icon"></i>
+                            <div>
+                                <strong>WhatsApp</strong>
+                                <p><?php echo defined('OWNER_PHONE') ? OWNER_PHONE : '+254 712 345 678'; ?></p>
+                                <p class="text-muted small">Instant messaging support</p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-info-item">
+                            <i class="fas fa-map-marker-alt contact-info-icon"></i>
+                            <div>
+                                <strong>Visit Us</strong>
+                                <p><?php echo defined('OWNER_ADDRESS') ? OWNER_ADDRESS : 'Nairobi, Kenya'; ?></p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-info-item">
+                            <i class="fas fa-clock contact-info-icon"></i>
+                            <div>
+                                <strong>Business Hours</strong>
+                                <p><?php echo defined('BUSINESS_HOURS') ? BUSINESS_HOURS : 'Mon-Sat: 9AM-6PM'; ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="col-lg-8">
+                <div class="form-card">
+                    <header class="form-header">
+                        <h2>Send us a Message</h2>
+                        <p>Have a question or custom design idea? We'd love to hear from you.</p>
+                    </header>
+
+                    <form id="contact-form" class="contact-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="full-name">Full Name <span class="required">*</span></label>
+                                    <input type="text" id="full-name" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email">Email Address <span class="required">*</span></label>
+                                    <input type="email" id="email" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="tel" id="phone" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="preferred-method">Preferred Contact Method <span class="required">*</span></label>
+                                    <select id="preferred-method" class="form-control" required>
+                                        <option value="">Select method</option>
+                                        <option value="email">Email</option>
+                                        <option value="phone">Phone</option>
+                                        <option value="whatsapp">WhatsApp</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject">Subject <span class="required">*</span></label>
+                            <input type="text" id="subject" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Message <span class="required">*</span></label>
+                            <textarea id="message" class="form-control" rows="5" required placeholder="Tell us more about your inquiry or custom design ideas."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-
-    <form id="contact-form" class="message-form" style="max-width: 500px;">
-        <h2>Send us a Message</h2>
-        <div class="form-group">
-            <label>Full Name *</label>
-            <input type="text" id="full-name" required>
-        </div>
-        <div class="form-group">
-            <label>Email Address *</label>
-            <input type="email" id="email" required>
-        </div>
-        <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" id="phone">
-        </div>
-        <div class="form-group">
-            <label>Preferred Contact Method *</label>
-            <select id="preferred-method" required>
-                <option value="">Select method</option>
-                <option value="email">Email</option>
-                <option value="phone">Phone</option>
-                <option value="whatsapp">WhatsApp</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Subject *</label>
-            <input type="text" id="subject" required>
-        </div>
-        <div class="form-group">
-            <label>Message *</label>
-            <textarea id="message" rows="5" required placeholder="Tell us more about your inquiry or custom design ideas."></textarea>
-        </div>
-        <button type="submit" class="btn" style="width: 100%;">Send Message →</button>
-    </form>
-</div>
+</section>
 
 <script>
 document.getElementById('contact-form').addEventListener('submit', function(e) {
@@ -103,4 +155,4 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
 });
 </script>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<!-- footer provided by index.php -->
