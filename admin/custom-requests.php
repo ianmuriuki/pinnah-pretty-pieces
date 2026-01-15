@@ -20,28 +20,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 }
 ?>
 <?php include __DIR__ . '/../includes/header.php'; ?>
-<link rel="stylesheet" href="../assets/css/admin.css">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>assets/css/admin.css">
 <script src="../assets/js/admin.js" defer></script>
 
-<div class="admin-sidebar">
-    <h2>Admin Panel</h2>
-    <nav class="admin-nav">
-        <ul>
-            <li><a href="dashboard.php">📊 Dashboard</a></li>
-            <li><a href="users.php">👥 Users</a></li>
-            <li><a href="products.php">💎 Products</a></li>
-            <li><a href="custom-requests.php" class="active">✨ Requests</a></li>
-            <li><a href="../" class="btn-logout">🚪 Logout</a></li>
-        </ul>
-    </nav>
-</div>
-
-<div class="admin-main">
-    <div class="admin-card">
-        <h1 style="color: var(--purple);">Custom Design Requests</h1>
-        <input type="text" class="search-input" placeholder="Search requests..." style="width: 200px; margin-bottom: 1rem; padding: 0.5rem;">
+<div class="admin-wrapper">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.php" class="sidebar-brand">
+                <i class="fas fa-gem"></i>
+                <span>Admin Panel</span>
+            </a>
+            <button class="sidebar-toggle d-lg-none" id="sidebarToggle">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         
-        <table class="admin-table">
+        <nav class="admin-nav">
+            <ul>
+                <li>
+                    <a href="dashboard.php" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="users.php" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="products.php" class="nav-link">
+                        <i class="fas fa-gem"></i>
+                        <span>Products</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="custom-requests.php" class="nav-link active">
+                        <i class="fas fa-star"></i>
+                        <span>Custom Requests</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="../index.php" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>View Site</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="../index.php?logout=1" class="nav-link logout-link">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+<main class="admin-main">
+        <div class="admin-header">
+            <div>
+                <h1 class="page-title">Custom Design Requests</h1>
+                <p class="page-subtitle">Manage custom jewelry design requests from customers</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon d-lg-none" id="mobileSidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        <div class="admin-card">
+            <div class="card-header">
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search requests..." id="requestSearch">
+                </div>
+            </div>
+            
+            <div class="table-wrapper">
+                <table class="admin-table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -63,28 +121,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                     <td><?php echo htmlspecialchars($request['user_email']); ?></td>
                     <td><?php echo ucfirst($request['jewelry_type']); ?></td>
                     <td><?php echo htmlspecialchars(substr($request['description'], 0, 50)) . '...'; ?></td>
-                    <td>$<?php echo number_format($request['budget'], 2); ?></td>
+                    <td>KSh <?php echo number_format($request['budget'], 2); ?></td>
                     <td>
-                        <form method="POST" style="display: inline;">
+                        <form method="POST" style="display: inline;" onchange="this.submit()">
                             <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
-                            <select name="status" onchange="this.form.submit()" style="padding: 0.25rem; border: 1px solid var(--primary-pink); border-radius: 4px;">
+                            <input type="hidden" name="update_status" value="1">
+                            <select name="status" class="form-control status-select">
                                 <option value="new" <?php echo $request['status'] === 'new' ? 'selected' : ''; ?>>New</option>
                                 <option value="contacted" <?php echo $request['status'] === 'contacted' ? 'selected' : ''; ?>>Contacted</option>
                                 <option value="in_progress" <?php echo $request['status'] === 'in_progress' ? 'selected' : ''; ?>>In Progress</option>
                                 <option value="completed" <?php echo $request['status'] === 'completed' ? 'selected' : ''; ?>>Completed</option>
                             </select>
-                            <input type="hidden" name="update_status" value="1">
                         </form>
                     </td>
                     <td><?php echo date('M j, Y', strtotime($request['created_at'])); ?></td>
                     <td>
-                        <a href="mailto:<?php echo $request['user_email']; ?>?subject=Re: Custom <?php echo ucfirst($request['jewelry_type']); ?> Design" class="btn btn-edit btn-small">Reply</a>
+                        <a href="mailto:<?php echo $request['user_email']; ?>?subject=Re: Custom <?php echo ucfirst($request['jewelry_type']); ?> Design" class="btn-icon btn-edit" title="Reply">
+                            <i class="fas fa-envelope"></i>
+                        </a>
                     </td>
                 </tr>
                 <?php endforeach; ?>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
+    </main>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mobileToggle = document.getElementById('mobileSidebarToggle');
+    const sidebar = document.querySelector('.admin-sidebar');
+    
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', function() {
+            sidebar.classList.add('show');
+        });
+    }
+    
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+        });
+    }
+    
+    // Request search
+    const searchInput = document.getElementById('requestSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.admin-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
