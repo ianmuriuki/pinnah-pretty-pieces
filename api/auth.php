@@ -1,92 +1,128 @@
 <?php
-/*
- * Authentication API for Pinnah's Pretty Pieces
- * Endpoints: POST /api/auth.php?action=register, POST /api/auth.php?action=login, GET /api/auth.php?action=logout
- * Returns JSON. Include in forms via AJAX (fetch() in main.js).
- */
-
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: ' . implode(', ', ALLOWED_ORIGINS));
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
+// Simple CORS (Adjust if needed)
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit(0);
 
 $action = $_GET['action'] ?? '';
 $response = ['success' => false, 'message' => 'Invalid action'];
 
+// Get JSON or Form Data
+$input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+
 switch ($action) {
     case 'register':
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $response['message'] = 'Method not allowed';
-            break;
-        }
-        $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
         $full_name = sanitizeInput($input['full_name'] ?? '');
         $email = sanitizeInput($input['email'] ?? '', 'email');
         $password = $input['password'] ?? '';
         $phone = sanitizeInput($input['phone'] ?? '');
 
-        if (empty($full_name) || empty($email) || empty($password) || strlen($password) < 6) {
-            $response['message'] = 'Invalid input';
+        // 1. Validation check
+        if (empty($full_name) || empty($email) || strlen($password) < 6) {
+            $response['message'] = 'Valid Name, Email, and 6-char Password required';
             break;
         }
 
-        $db = Database::getInstance();
-        $check = $db->query("SELECT id FROM users WHERE email = ?", [$email]);
-        if (!empty($check)) {
-            $response['message'] = 'Email already registered';
-            break;
-        }
+        try {
+            $db = Database::getInstance();
+            
+            // 2. Check for duplicate email using the unique constraint in schema
+            $checkStmt = $db->pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $checkStmt->execute([$email]);
+            if ($checkStmt->fetch()) {
+                $response['message'] = 'Email already registered';
+                break;
+            }
 
-        $hashed = hashPassword($password);
-        $stmt = $db->pdo->prepare("INSERT INTO users (full_name, email, password, phone) VALUES (?, ?, ?, ?)");
-        if ($stmt->execute([$full_name, $email, $hashed, $phone])) {
-            sendWelcomeEmail($email, $full_name);
-            $response = ['success' => true, 'message' => 'Registered successfully. Please login.'];
-        } else {
-            $response['message'] = 'Registration failed';
+            // 3. Hash password using the method recommended in your schema
+            // Note: Your schema notes suggest password_hash() is required
+            $hashed = password_hash($password, PASSWORD_DEFAULT);
+            
+            // 4. Insert into database
+            $stmt = $db->pdo->prepare("INSERT INTO users (full_name, email, password, phone, role) VALUES (?, ?, ?, ?, 'user')");
+            if ($stmt->execute([$full_name, $email, $hashed, $phone])) {
+                $response = ['success' => true, 'message' => 'Registered successfully! Please login.'];
+            } else {
+                $response['message'] = 'Registration failed due to a database error.';
+            }
+        } catch (PDOException $e) {
+            $response['message'] = 'Server error: ' . $e->getMessage();
         }
         break;
 
     case 'login':
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $response['message'] = 'Method not allowed';
-            break;
-        }
-        $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
         $email = sanitizeInput($input['email'] ?? '', 'email');
         $password = $input['password'] ?? '';
 
         if (empty($email) || empty($password)) {
-            $response['message'] = 'Invalid credentials';
+            $response['message'] = 'Email and password required';
             break;
         }
 
+        // Uses the loginUser function from your includes/functions.php
         if (loginUser($email, $password)) {
-            $response = ['success' => true, 'message' => 'Logged in successfully', 'user' => ['email' => $email]];
+            $response = ['success' => true, 'message' => 'Logged in successfully'];
         } else {
             $response['message'] = 'Invalid email or password';
         }
         break;
 
-    case 'logout':
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            $response['message'] = 'Method not allowed';
+    case 'update_profile':
+        if (!isLoggedIn()) {
+            $response['message'] = 'Login required';
             break;
         }
-        logoutUser();
-        $response = ['success' => true, 'message' => 'Logged out successfully'];
+
+        $full_name = sanitizeInput($input['full_name'] ?? '');
+        $phone = sanitizeInput($input['phone'] ?? '');
+        $password = $input['password'] ?? '';
+        $user_id = $_SESSION['user_id'];
+
+        if (empty($full_name)) {
+            $response['message'] = 'Full name is required';
+            break;
+        }
+
+        $db = Database::getInstance();
+        
+        try {
+            if (!empty($password)) {
+                if (strlen($password) < 6) {
+                    $response['message'] = 'New password must be at least 6 characters';
+                    break;
+                }
+                $hashed = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $db->pdo->prepare("UPDATE users SET full_name = ?, phone = ?, password = ? WHERE id = ?");
+                $params = [$full_name, $phone, $hashed, $user_id];
+            } else {
+                $stmt = $db->pdo->prepare("UPDATE users SET full_name = ?, phone = ? WHERE id = ?");
+                $params = [$full_name, $phone, $user_id];
+            }
+
+            if ($stmt->execute($params)) {
+                $_SESSION['user_name'] = $full_name; // Refresh name in UI header
+                $response = ['success' => true, 'message' => 'Profile updated successfully'];
+            } else {
+                $response['message'] = 'Database error updating profile';
+            }
+        } catch (PDOException $e) {
+            $response['message'] = 'Update failed: ' . $e->getMessage();
+        }
+        break;
+
+    case 'logout':
+        logoutUser(); // Handled in session.php/functions.php
+        $response = ['success' => true, 'message' => 'Logged out'];
         break;
 
     default:
-        $response['message'] = 'No action specified';
+        $response['message'] = 'No valid action provided';
 }
 
 echo json_encode($response);
-?>

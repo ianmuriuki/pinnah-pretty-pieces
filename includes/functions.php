@@ -1,8 +1,15 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/database.php';  // Base DB
+/**
+ * includes/functions.php - Updated for DB Authentication
+ */
 
-// Sanitize
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/session.php'; 
+
+/**
+ * Sanitize user input
+ */
 function sanitizeInput($input, $type = 'string') {
     if (is_array($input)) return array_map('sanitizeInput', $input);
     $input = trim($input);
@@ -13,77 +20,95 @@ function sanitizeInput($input, $type = 'string') {
     return $input;
 }
 
-// Send email (basic mail(), template support)
-function sendEmail($to, $subject, $message, $isHtml = true, $template = null) {
-    $headers = "From: " . MAIL_FROM_NAME . " <" . MAIL_FROM . ">\r\n";
-    if ($isHtml) {
-        $headers .= "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-    }
-    if ($template) {
-        $templatePath = __DIR__ . '/../emails/' . $template . '.html';
-        if (file_exists($templatePath)) {
-            $message = file_get_contents($templatePath);
-            $message = str_replace(['{site_name}', '{user_name}', '{message}'], [SITE_NAME, $user_name ?? 'Customer', $message], $message);
+/**
+ * Auth Functions
+ */
+function loginUser($email, $password) {
+    $db = Database::getInstance();
+    $clean_email = filter_var($email, FILTER_SANITIZE_EMAIL);
+    
+    // 1. Fetch user by email
+    $stmt = $db->pdo->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+    $stmt->execute([$clean_email]);
+    $user = $stmt->fetch();
+    
+    // 2. Verify password against the DB hash
+    if ($user && password_verify($password, $user['password'])) {
+        // Prevent session fixation by regenerating ID (only if no output sent yet)
+        if (!headers_sent()) {
+            session_regenerate_id(true);
         }
-    }
-    return mail($to, $subject, $message, $headers);
-}
-
-// Send welcome
-function sendWelcomeEmail($email, $name) {
-    $subject = "Welcome to " . SITE_NAME;
-    $body = "Hi $name,<br>Thanks for joining!";
-    return sendEmail($email, $subject, $body, true, 'welcome');
-}
-
-// Send order
-function sendOrderConfirmation($email, $orderId, $total) {
-    $subject = "Order #" . $orderId . " Confirmed";
-    $body = "Total: $" . $total;
-    return sendEmail($email, $subject, $body, true, 'order-confirmation');
-}
-
-// Send custom
-function sendCustomRequestNotification($requestData) {
-    $subject = "New Custom Request";
-    $body = "Name: " . $requestData['user_name'] . "<br>Description: " . $requestData['description'];
-    return sendEmail(ADMIN_EMAIL, $subject, $body, true, 'custom-request');
-}
-
-// Cart count (basic session)
-function getCartCount() {
-    if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
-    return count($_SESSION['cart']);
-}
-
-// Add to cart (session only for test)
-function addToCart($productId, $quantity = 1) {
-    if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
-    $_SESSION['cart'][$productId] = ['quantity' => $quantity];
-    return true;
-}
-
-// Password
-function hashPassword($password) {
-    return password_hash($password, PASSWORD_DEFAULT);
-}
-
-function verifyPassword($password, $hash) {
-    return password_verify($password, $hash);
-}
-
-// Upload
-function handleUpload($file, $subDir = 'products') {
-    $targetDir = UPLOAD_DIR . $subDir . '/';
-    if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
-    $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    if (!in_array($fileExt, ALLOWED_EXTENSIONS) || $file['size'] > MAX_UPLOAD_SIZE) return false;
-    $newName = uniqid() . '.' . $fileExt;
-    $targetPath = $targetDir . $newName;
-    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-        return UPLOAD_URL . $subDir . '/' . $newName;
+        
+        // 3. Set Session Variables
+        $_SESSION['user_id']    = $user['id'];
+        $_SESSION['user_role']  = $user['role'];
+        $_SESSION['user_name']  = $user['full_name'];
+        $_SESSION['user_email'] = $user['email'];
+        
+        return true;
     }
     return false;
+}
+
+/**
+ * Get current logged in user details
+ */
+function getUser() {
+    if (!isLoggedIn()) return null;
+    $db = Database::getInstance();
+    $stmt = $db->pdo->prepare("SELECT id, full_name, email, role, phone FROM users WHERE id = ?");
+    $stmt->execute([getUserId()]);
+    return $stmt->fetch();
+}
+
+/**
+ * Logout Helper
+ */
+function logoutUser() {
+    session_unset();
+    session_destroy();
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+}
+
+/**
+ * Cart Functions
+ */
+function addToCart($productId, $quantity) {
+    if (isLoggedIn()) {
+        $userId = getUserId();
+        $db = Database::getInstance();
+        // Uses the custom query method from your database class
+        $db->query("
+            INSERT INTO carts (user_id, product_id, quantity) 
+            VALUES (?, ?, ?) 
+            ON DUPLICATE KEY UPDATE quantity = quantity + ?
+        ", [$userId, $productId, $quantity, $quantity]);
+    } else {
+        if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
+        if (isset($_SESSION['cart'][$productId])) {
+            $_SESSION['cart'][$productId]['quantity'] += $quantity;
+        } else {
+            $_SESSION['cart'][$productId] = ['quantity' => $quantity];
+        }
+    }
+}
+
+function getCartCount() {
+    if (isLoggedIn()) {
+        $db = Database::getInstance();
+        $res = $db->query("SELECT SUM(quantity) as total FROM carts WHERE user_id = ?", [getUserId()]);
+        return (int)($res[0]['total'] ?? 0);
+    }
+    $count = 0;
+    if (isset($_SESSION['cart'])) {
+        foreach ($_SESSION['cart'] as $item) $count += $item['quantity'];
+    }
+    return $count;
 }
 ?>

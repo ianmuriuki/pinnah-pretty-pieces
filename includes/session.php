@@ -1,71 +1,47 @@
 <?php
+/**
+ * includes/session.php
+ */
 require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/database.php';  // DB base
 
-// Start session
+// Force session settings to prevent XAMPP folder permission issues
+// MUST be done before session_start()
 if (session_status() === PHP_SESSION_NONE) {
-    session_name(SESSION_NAME);
-    session_start();
-    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > SESSION_TIMEOUT)) {
-        session_unset();
-        session_destroy();
-        header('Location: ' . SITE_URL . 'index.php?page=login&expired=1');
-        exit();
-    }
-    $_SESSION['last_activity'] = time();
+    @ini_set('session.use_only_cookies', 1);
+    @ini_set('session.use_strict_mode', 1);
+    @session_start();
 }
 
-// Login
-function loginUser($email, $password) {
-    $db = Database::getInstance();
-    $stmt = $db->pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([sanitizeInput($email, 'email')]);
-    $user = $stmt->fetch();
-    if ($user && verifyPassword($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_role'] = $user['role'];
-        $_SESSION['user_email'] = $user['email'];
-        return true;
-    }
-    return false;
-}
-
-// Logout
-function logoutUser() {
+// Security: Session Timeout Check
+$timeout = 3600; 
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > $timeout)) {
     session_unset();
     session_destroy();
-    header('Location: ' . SITE_URL . 'index.php');
+    header('Location: /pinnahs-pretty-pieces/admin/index.php?expired=1');
     exit();
 }
+$_SESSION['last_activity'] = time();
 
-// Checks
 function isLoggedIn() {
     return isset($_SESSION['user_id']);
+}
+
+function isAdmin() {
+    return (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin');
 }
 
 function getUserId() {
     return $_SESSION['user_id'] ?? null;
 }
 
-function getUser() {
-    if (!isLoggedIn()) return null;
-    $db = Database::getInstance();
-    $stmt = $db->pdo->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([getUserId()]);
-    return $stmt->fetch();
-}
-
-function isAdmin() {
-    return isLoggedIn() && $_SESSION['user_role'] === 'admin';
-}
-
-// Logout handler
+// Handle Logout via GET
 if (isset($_GET['logout']) && $_GET['logout'] == 1) {
-    logoutUser();
+    $_SESSION = array();
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
+    }
+    session_destroy();
+    header('Location: /pinnahs-pretty-pieces/admin/index.php');
+    exit();
 }
-
-if (isLoggedIn() && !isset($_SESSION['regenerated'])) {
-    session_regenerate_id(true);
-    $_SESSION['regenerated'] = true;
-}
-?>
